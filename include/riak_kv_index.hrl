@@ -20,6 +20,9 @@
 %%
 %% -------------------------------------------------------------------
 
+-ifndef(RIAK_KV_INDEX_HRL).
+-define(RIAK_KV_INDEX_HRL, included).
+
 %% Index query records
 -record(riak_kv_index_v2, {
           start_key= <<>> :: binary(),
@@ -41,8 +44,10 @@
           start_inclusive=true :: boolean(),
           end_inclusive=true :: boolean(),
           return_body=false ::boolean(), %% Note, only for riak cs bucket folds
-          term_regex :: binary() | undefined,
+          term_regex :: binary() | tuple() | undefined,  %% re:mp() not exported, sigh
           max_results :: integer() | undefined
          }).
 
 -define(KV_INDEX_Q, #riak_kv_index_v3).
+
+-endif.

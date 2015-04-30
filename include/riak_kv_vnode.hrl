@@ -1,4 +1,5 @@
 -include_lib("riak_core/include/riak_core_vnode.hrl").
+-include("riak_kv_index.hrl").  % for #riak_kv_index_v3{}
 
 -record(riak_kv_put_req_v1, {
           bkey :: {binary(),binary()},
@@ -43,13 +44,13 @@
 -record(riak_kv_index_req_v1, {
           bucket :: binary() | tuple(),
           item_filter :: riak_kv_coverage_filter:filter(),
-          qry :: riak_index:query_def()}).
+          qry :: #riak_kv_index_v3{}}).  % no, it isn't riak_index:query_def()
 
 %% same as _v1, but triggers ack-based backpressure
 -record(riak_kv_index_req_v2, {
           bucket :: binary() | tuple(),
           item_filter :: riak_kv_coverage_filter:filter(),
-          qry :: riak_index:query_def()}).
+          qry :: #riak_kv_index_v3{}}).
 
 -record(riak_kv_vnode_status_req_v1, {}).
 

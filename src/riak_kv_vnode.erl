@@ -905,7 +905,7 @@ handle_coverage(?KV_INDEX_REQ{bucket=Bucket,
     handle_coverage_index(Bucket, ItemFilter, Query,
                           FilterVNodes, Sender, State, fun result_fun_ack/2).
 
--spec prepare_index_query(?KV_INDEX_Q{}) -> ?KV_INDEX_Q{}.
+-spec prepare_index_query(#riak_kv_index_v3{}) -> #riak_kv_index_v3{}.
 prepare_index_query(#riak_kv_index_v3{term_regex=RE} = Q) when
         RE =/= undefined ->
     {ok, CompiledRE} = re:compile(RE),
@@ -916,12 +916,21 @@ prepare_index_query(Q) ->
 %% @doc Batch size for results is set to 2i max_results if that is less
 %% than the default size. Without this the vnode may send back to the FSM
 %% more items than could ever be sent back to the client.
+-spec buffer_size_for_index_query(#riak_kv_index_v3{}, pos_integer()) -> pos_integer().
 buffer_size_for_index_query(#riak_kv_index_v3{max_results=N}, DefaultSize)
   when is_integer(N), N < DefaultSize ->
     N;
 buffer_size_for_index_query(_Q, DefaultSize) ->
     DefaultSize.
 
+-spec handle_coverage_index(
+        Bucket::binary()|tuple(), riak_kv_coverage_filter:filter(), #riak_kv_index_v3{},
+        FilterVNodes::proplists:proplist(), pid(),
+        #state{},
+        fun((binary()|tuple(), pid()) -> fun())) ->
+                                   {async, {fold, AsyncWork::term(), fun()}, pid(), #state{}} |
+                                   {noreply, #state{}} |
+                                   {reply, {error, {indexes_not_supported, module()}}, #state{}}.
 handle_coverage_index(Bucket, ItemFilter, Query,
                       FilterVNodes, Sender,
                       State=#state{mod=Mod,
