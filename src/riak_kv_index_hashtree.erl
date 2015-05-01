@@ -67,6 +67,10 @@
 -type index_n() :: {index(), non_neg_integer()}.
 -type orddict() :: orddict:orddict().
 -type proplist() :: proplists:proplist().
+-type bkey() :: {riak_object:bucket(), riak_object:key()}.
+-type delete_object_item() :: {object, bkey()}.
+-type insert_object_item() :: {object, bkey(), riak_object:riak_object() | binary()} |
+                              {index_n(), binary(), binary()}.
 -type riak_object_t2b() :: binary().
 -type hashtree() :: hashtree:hashtree().
 
@@ -111,23 +115,25 @@ start_link(Index, VNPid, Opts) ->
 %%      Valid options:
 %%       ``if_missing'' :: Only insert the key/hash pair if the key does not
 %%                         already exist in the hashtree.
+-spec insert([insert_object_item()], proplist(), pid()|undefined) -> ok.
 insert(Items, _Opts, Tree) when Tree =:= undefined; Items =:= [] ->
     ok;
 insert(Items=[_|_], Opts, Tree) ->
     catch gen_server:call(Tree, {insert, Items, Opts}, infinity).
 
+-spec async_insert([insert_object_item()], proplist(), pid()|undefined) -> ok.
 async_insert(Items, _Opts, Tree) when Tree =:= undefined; Items =:= [] ->
     ok;
 async_insert(Items=[_|_], Opts, Tree) ->
     gen_server:cast(Tree, {insert, Items, Opts}).
 
--spec delete([{binary(), binary()}], pid()) -> ok.
+-spec delete([delete_object_item()], pid()|undefined) -> ok.
 delete(Items, Tree) when Tree =:= undefined; Items =:= [] ->
     ok;
 delete(Items=[{_Id, _Key}|_], Tree) ->
     catch gen_server:call(Tree, {delete, Items}, infinity).
 
--spec async_delete({binary(), binary()}|[{binary(), binary()}], pid()) -> ok.
+-spec async_delete([delete_object_item()], pid()|undefined) -> ok.
 async_delete(Items, Tree) when Tree =:= undefined; Items =:= [] ->
     ok;
 async_delete(Items=[{_Id, _Key}|_], Tree) ->
