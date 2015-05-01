@@ -22,7 +22,6 @@
 
 -module(riak_kv_backend).
 
--export([behaviour_info/1]).
 -export([callback_after/3]).
 
 -ifdef(TEST).
@@ -41,29 +40,41 @@
               fold_keys_fun/0,
               fold_objects_fun/0]).
 
--spec behaviour_info(atom()) -> 'undefined' | [{atom(), arity()}].
-behaviour_info(callbacks) ->
-    [
-     {api_version,0},
-     {capabilities, 1},  % (State)
-     {capabilities, 2},  % (Bucket, State)
-     {start,2},          % (Partition, Config)
-     {stop,1},           % (State)
-     {get,3},            % (Bucket, Key, State)
-     {put,5},            % (Bucket, Key, IndexSpecs, Val, State)
-     {delete,4},         % (Bucket, Key, IndexSpecs, State)
-     {drop,1},           % (State)
-     {fold_buckets,4},   % (FoldBucketsFun, Acc, Opts, State),
-                         %   FoldBucketsFun(Bucket, Acc)
-     {fold_keys,4},      % (FoldKeysFun, Acc, Opts, State),
-                         %   FoldKeysFun(Bucket, Key, Acc)
-     {fold_objects,4},   % (FoldObjectsFun, Acc, Opts, State),
-                         %   FoldObjectsFun(Bucket, Key, Object, Acc)
-     {is_empty,1},       % (State)
-     {status,1},         % (State)
-     {callback,3}];      % (Ref, Msg, State) ->
-behaviour_info(_Other) ->
-    undefined.
+%% behaviour info
+-type xstate() :: term().
+-type config() :: [{atom(), term()}].
+-callback api_version() -> {ok, integer()}.
+-callback capabilities(term()) -> {ok, [atom()]}.
+-callback capabilities(riak_object:bucket(), term()) -> {ok, [atom()]}.
+-callback start(integer(), config()) -> {ok, xstate()} | {error, term()}.
+-callback stop(xstate()) -> ok.
+-callback get(riak_object:bucket(), riak_object:key(), xstate()) ->
+    {ok, any(), xstate()} |
+    {error, not_found, xstate()} |
+    {error, term(), xstate()}.
+
+-type index_spec() :: {add, Index, SecondaryKey} | {remove, Index, SecondaryKey}.
+-callback put(riak_object:bucket(), riak_object:key(),
+              [index_spec()], binary(), xstate()) ->
+    {ok, xstate()} | {error, term(), xstate()}.
+-callback delete(riak_object:bucket(), riak_object:key(),
+                 [index_spec()], xstate()) ->
+    {ok, xstate()} | {error, term(), xstate()}.
+-callback drop(xstate()) ->
+    {ok, xstate()} | {error, term(), xstate()}.
+-callback fold_buckets(riak_kv_backend:fold_buckets_fun(),
+                       any(), [], xstate()) ->
+    {ok, any()} | {async, fun()} | {error, term()}.
+-callback callback(reference(), any(), xstate()) -> {ok, xstate()}.
+-callback status(xstate()) -> [{atom(), term()}].
+-callback fold_keys(riak_kv_backend:fold_keys_fun(),
+                    any(), [{atom(), term()}], xstate()) ->
+    {ok, term()} | {async, fun()} | {error, term()}.
+-callback fold_objects(riak_kv_backend:fold_objects_fun(),
+                       any(), [{atom(), term()}], xstate()) ->
+    {ok, any()} | {async, fun()} | {error, term()}.
+-callback is_empty(xstate()) -> boolean() | {error, term()}.
+
 
 %% Queue a callback for the backend after Time ms.
 -spec callback_after(integer(), reference(), term()) -> reference().
