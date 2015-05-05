@@ -6,10 +6,6 @@ riak_kv_vnode.erl:1376: Function do_backend_delete/3 has no local return
 Callback info about the riak_core_vnode_worker behaviour is not available
 Callback info about the riak_core_coverage_fsm behaviour is not available
 Unknown functions:
-  cluster_info:dump_all_connected/1
-  cluster_info:dump_nodes/2
-  cluster_info:format/3
-  cluster_info:register_app/1
   dtrace:init/0
   yz_kv:index/3
   yz_kv:should_handoff/1
